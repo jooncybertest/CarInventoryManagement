@@ -32,10 +32,8 @@ public class Car {
     private Integer year;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Status status;
 
-    @Column(nullable = false)
     private Boolean availability;
 
     @Column(nullable = false, unique = true)

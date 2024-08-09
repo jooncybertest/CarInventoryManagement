@@ -5,17 +5,19 @@ import com.junsoo.project.carinventorymanagement.client.AuthServiceClient;
 import com.junsoo.project.carinventorymanagement.config.FeignClientInterceptor;
 import com.junsoo.project.carinventorymanagement.dto.UserDto;
 import com.junsoo.project.carinventorymanagement.entity.Car;
+import com.junsoo.project.carinventorymanagement.entity.Status;
+import com.junsoo.project.carinventorymanagement.entity.User;
 import com.junsoo.project.carinventorymanagement.repository.CarRepository;
+import com.junsoo.project.carinventorymanagement.request.CreateCarsRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,20 +26,56 @@ public class CarService {
     private final CarRepository carRepository;
     private final AuthServiceClient authServiceClient;
     private final Logger logger = LoggerFactory.getLogger(CarService.class);
-    public ResponseEntity<List<Car>> findMyCars(String token) {
+
+    public Page<Car> findAllCars(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return carRepository.findAll(pageable);
+    }
+    public List<Car> findMyCars(String token) {
         try {
             FeignClientInterceptor.setToken(token);
-            UserDto user = authServiceClient.authenticatedUser();
-            logger.info("Retrieved user info: {}", user);
-            List<Car> myCars = carRepository.findAllByUserEmail(user.getEmail());
-            return new ResponseEntity<>(myCars, HttpStatus.OK);
+            UserDto userDto = authServiceClient.authenticatedUser();
+            logger.info("Retrieved user info: {}", userDto);
+            return carRepository.findAllByUserEmail(userDto.getEmail());
         } finally {
             FeignClientInterceptor.clear();
         }
     }
 
-    public Page<Car> findAllCars(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return carRepository.findAll(pageable);
+    public List<Car> registerMyCars(String token, List<CreateCarsRequest> requests) {
+        try{
+            FeignClientInterceptor.setToken(token);
+            UserDto userDto = authServiceClient.authenticatedUser();
+            logger.info("Retrieved user info: {}", userDto);
+            return createMyCarObject(requests, userDto);
+        }
+        finally {
+            FeignClientInterceptor.clear();
+        }
+    }
+
+    // TODO: 'availability' and 'status' are determined by system owner. they will be later determined
+    private List<Car> createMyCarObject(List<CreateCarsRequest> requests, UserDto userDto) {
+        List<Car> cars = new ArrayList<>();
+        for (CreateCarsRequest request : requests) {
+            Car car = new Car();
+            car.setMake(request.getMake());
+            car.setColor(request.getColor());
+            car.setMileage(request.getMileage());
+            car.setLicensePlate(request.getLicensePlate());
+            car.setYear(request.getYear());
+            car.setVin(request.getVin());
+            car.setModel(request.getModel());
+            car.setStatus(Status.PENDING);
+            User user = new User();
+            user.setEmail(userDto.getEmail());
+            car.setUser(user);
+            cars.add(car);
+        }
+        return saveAll(cars);
+    }
+
+    public List<Car> saveAll(List<Car> cars) {
+        return carRepository.saveAll(cars);
     }
 }
