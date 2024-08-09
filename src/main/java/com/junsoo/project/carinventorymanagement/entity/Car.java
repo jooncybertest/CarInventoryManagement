@@ -7,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Entity
 @Table(name = "cars")
@@ -17,10 +16,10 @@ public class Car {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
-    private UUID id;
+    private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_email", referencedColumnName = "email", nullable = false)
     private User user;
 
     @Column(nullable = false)

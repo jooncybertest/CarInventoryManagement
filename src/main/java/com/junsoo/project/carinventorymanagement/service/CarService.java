@@ -9,6 +9,9 @@ import com.junsoo.project.carinventorymanagement.repository.CarRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -26,14 +29,15 @@ public class CarService {
             FeignClientInterceptor.setToken(token);
             UserDto user = authServiceClient.authenticatedUser();
             logger.info("Retrieved user info: {}", user);
-            List<Car> myCars = carRepository.findAllByUserId(user.getId());
+            List<Car> myCars = carRepository.findAllByUserEmail(user.getEmail());
             return new ResponseEntity<>(myCars, HttpStatus.OK);
         } finally {
             FeignClientInterceptor.clear();
         }
     }
 
-    public List<Car> findAllCars() {
-        return carRepository.findAll();
+    public Page<Car> findAllCars(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return carRepository.findAll(pageable);
     }
 }

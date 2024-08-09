@@ -7,10 +7,6 @@ import lombok.Getter;
 @Getter
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @Column(nullable = false)
-    private Integer id;
-
     @Column(unique = true, length = 100, nullable = false)
     private String email;
 }

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface CarRepository extends JpaRepository<Car, UUID> {
-    List<Car> findAllByUserId(Integer userId);
+public interface CarRepository extends JpaRepository<Car, Long> {
+    List<Car> findAllByUserEmail(String email);
 
 }
