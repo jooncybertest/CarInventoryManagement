@@ -9,6 +9,8 @@ import com.junsoo.project.carinventorymanagement.entity.Status;
 import com.junsoo.project.carinventorymanagement.entity.User;
 import com.junsoo.project.carinventorymanagement.repository.CarRepository;
 import com.junsoo.project.carinventorymanagement.request.CreateCarsRequest;
+import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,36 +27,40 @@ import java.util.List;
 public class CarService {
     private final CarRepository carRepository;
     private final AuthServiceClient authServiceClient;
+    private final FeignService feignService;
     private final Logger logger = LoggerFactory.getLogger(CarService.class);
 
     public Page<Car> findAllCars(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return carRepository.findAll(pageable);
     }
-    public List<Car> findMyCars(String token) {
+    public List<Car> findMyCars(String header) {
         try {
-            FeignClientInterceptor.setToken(token);
-            UserDto userDto = authServiceClient.authenticatedUser();
-            logger.info("Retrieved user info: {}", userDto);
+            UserDto userDto = feignService.getUserInformation(header);
             return carRepository.findAllByUserEmail(userDto.getEmail());
         } finally {
             FeignClientInterceptor.clear();
         }
     }
 
-    public List<Car> registerMyCars(String token, List<CreateCarsRequest> requests) {
-        try{
-            FeignClientInterceptor.setToken(token);
-            UserDto userDto = authServiceClient.authenticatedUser();
-            logger.info("Retrieved user info: {}", userDto);
+    public List<Car> registerMyCars(String header, List<CreateCarsRequest> requests) {
+        try {
+            UserDto userDto = feignService.getUserInformation(header);
             return createMyCarObject(requests, userDto);
+        } finally {
+            FeignClientInterceptor.clear();
         }
-        finally {
+    }
+    public void deleteMyCars(String header, DeleteCarRequest request) {
+        try {
+            UserDto userDto = feignService.getUserInformation(header);
+            carRepository.deleteAllByIds(request.getIds());
+        } finally {
             FeignClientInterceptor.clear();
         }
     }
 
-    // TODO: 'availability' and 'status' are determined by system owner. they will be later determined
+    // NOTE: 'availability' and 'status' are determined by system owner. will be later determined
     private List<Car> createMyCarObject(List<CreateCarsRequest> requests, UserDto userDto) {
         List<Car> cars = new ArrayList<>();
         for (CreateCarsRequest request : requests) {

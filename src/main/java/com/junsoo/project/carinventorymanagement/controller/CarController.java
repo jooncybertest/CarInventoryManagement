@@ -3,6 +3,8 @@ package com.junsoo.project.carinventorymanagement.controller;
 
 import com.junsoo.project.carinventorymanagement.entity.Car;
 import com.junsoo.project.carinventorymanagement.request.CreateCarsRequest;
+import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
+import com.junsoo.project.carinventorymanagement.response.GeneralResponse;
 import com.junsoo.project.carinventorymanagement.service.CarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,12 +19,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CarController {
     private final CarService carService;
-    @GetMapping("/mine")
-    public ResponseEntity<List<Car>> getMyCars(@RequestHeader("Authorization") String header) {
-        String token = header.replace("Bearer ", "");
-        List<Car> myCars = carService.findMyCars(token);
-        return new ResponseEntity<>(myCars, HttpStatus.OK);
-    }
     @GetMapping("/all")
     public ResponseEntity<Page<Car>> getAllCars(
             @RequestParam(defaultValue = "0") int page,
@@ -30,12 +26,26 @@ public class CarController {
         Page<Car> cars = carService.findAllCars(page, size);
         return new ResponseEntity<>(cars, HttpStatus.OK);
     }
+    @GetMapping("/mine")
+    public ResponseEntity<List<Car>> getMyCars(@RequestHeader("Authorization") String header) {
+        List<Car> myCars = carService.findMyCars(header);
+        return new ResponseEntity<>(myCars, HttpStatus.OK);
+    }
     @PostMapping("/mine")
     public ResponseEntity<List<Car>> createMyCars(
             @RequestHeader("Authorization") String header,
             @RequestBody List<CreateCarsRequest> requests) {
-        String token = header.replace("Bearer ", "");
-        List<Car> createdCars = carService.registerMyCars(token, requests);
+        List<Car> createdCars = carService.registerMyCars(header, requests);
         return new ResponseEntity<>(createdCars, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/mine")
+    public ResponseEntity<GeneralResponse> deleteMyCars(
+            @RequestHeader("Authorization") String header,
+            @RequestBody DeleteCarRequest request) {
+        carService.deleteMyCars(header, request);
+        GeneralResponse response = new GeneralResponse();
+        response.setMessage("deleted successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
