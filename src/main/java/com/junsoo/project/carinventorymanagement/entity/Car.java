@@ -19,8 +19,12 @@ public class Car {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_email", referencedColumnName = "email", nullable = false)
-    private User user;
+    @JoinColumn(name = "selling_user_email", referencedColumnName = "email", nullable = false)
+    private User sellingUser;
+
+    @ManyToOne
+    @JoinColumn(name = "renting_user_email", referencedColumnName = "email", nullable = false)
+    private User rentingUser;
 
     @Column(nullable = false)
     private String make;
@@ -32,7 +36,10 @@ public class Car {
     private Integer year;
 
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private RentStatus rentStatus;
+
+    @Enumerated(EnumType.STRING)
+    private SellStatus sellStatus;
 
     private Boolean availability;
 

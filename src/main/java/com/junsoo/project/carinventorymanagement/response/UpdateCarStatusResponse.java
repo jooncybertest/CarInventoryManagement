@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateCarResponse {
+public class UpdateCarStatusResponse {
     private boolean success;
     private IsUserAdmin isUserAdmin;
     private List<CarDto> updatedCars;

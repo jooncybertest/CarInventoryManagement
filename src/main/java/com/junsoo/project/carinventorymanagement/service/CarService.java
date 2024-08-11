@@ -4,22 +4,21 @@ package com.junsoo.project.carinventorymanagement.service;
 import com.junsoo.project.carinventorymanagement.config.FeignClientInterceptor;
 import com.junsoo.project.carinventorymanagement.dto.CarDto;
 import com.junsoo.project.carinventorymanagement.dto.UserDto;
-import com.junsoo.project.carinventorymanagement.entity.Car;
-import com.junsoo.project.carinventorymanagement.entity.Status;
-import com.junsoo.project.carinventorymanagement.entity.User;
-import com.junsoo.project.carinventorymanagement.entity.UserRole;
+import com.junsoo.project.carinventorymanagement.entity.*;
 import com.junsoo.project.carinventorymanagement.exception.NotFoundException;
 import com.junsoo.project.carinventorymanagement.repository.CarRepository;
 import com.junsoo.project.carinventorymanagement.request.CreateCarRequest;
 import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
-import com.junsoo.project.carinventorymanagement.request.UpdateCarRequest;
+import com.junsoo.project.carinventorymanagement.request.UpdateCarStatusRequest;
 import com.junsoo.project.carinventorymanagement.response.IsUserAdmin;
-import com.junsoo.project.carinventorymanagement.response.UpdateCarResponse;
+import com.junsoo.project.carinventorymanagement.response.UpdateCarStatusResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,15 +30,21 @@ public class CarService {
     private final CarRepository carRepository;
     private final FeignService feignService;
 
-    public Page<Car> findAllCars(int page, int size) {
+    public Page<Car> findAllCars(String header, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return carRepository.findAll(pageable);
+        UserDto userDto = feignService.getUserInformation(header);
+        if (Objects.equals(userDto.getRole(), UserRole.ROLE_ADMIN.toString())) {
+            return carRepository.findAll(pageable);
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access Denied: You do not have the necessary permissions.");
+        }
+
     }
 
     public List<Car> findMyCars(String header) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
-            return carRepository.findAllByUserEmail(userDto.getEmail());
+            return carRepository.findAllBySellingUserEmail(userDto.getEmail());
         } finally {
             FeignClientInterceptor.clear();
         }
@@ -63,7 +68,7 @@ public class CarService {
         }
     }
 
-    public UpdateCarResponse updateCars(String header, List<UpdateCarRequest> requests) {
+    public UpdateCarStatusResponse updateCarsStatus(String header, List<UpdateCarStatusRequest> requests) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
             if (Objects.equals(userDto.getRole(), UserRole.ROLE_ADMIN.toString())) {
@@ -71,9 +76,9 @@ public class CarService {
                 List<CarDto> cars = updatedCars.stream()
                         .map(this::convertToDto)
                         .toList();
-                return new UpdateCarResponse(true, IsUserAdmin.ADMIN, cars);
+                return new UpdateCarStatusResponse(true, IsUserAdmin.ADMIN, cars);
             } else {
-                return new UpdateCarResponse(false, IsUserAdmin.NOT_ADMIN, null);
+                return new UpdateCarStatusResponse(false, IsUserAdmin.NOT_ADMIN, null);
             }
         } finally {
             FeignClientInterceptor.clear();
@@ -81,7 +86,7 @@ public class CarService {
     }
 
 
-    // NOTE: 'availability' and 'status' are determined by system owner. will be later determined
+    // NOTE: 'availability' and two kinds of 'status' will be updated by system owner later.
     private List<Car> createMyCarObjects(List<CreateCarRequest> requests, UserDto userDto) {
         List<Car> cars = new ArrayList<>();
         for (CreateCarRequest request : requests) {
@@ -93,21 +98,23 @@ public class CarService {
             car.setYear(request.getYear());
             car.setVin(request.getVin());
             car.setModel(request.getModel());
-            car.setStatus(Status.PENDING);
+            car.setRentStatus(RentStatus.NOT_AVAILABLE);
+            car.setSellStatus(SellStatus.PENDING);
+            car.setAvailability(false);
             User user = new User();
             user.setEmail(userDto.getEmail());
-            car.setUser(user);
+            car.setSellingUser(user);
             cars.add(car);
         }
         return saveAll(cars);
     }
 
-    private List<Car> updateCarObjects(List<UpdateCarRequest> requests) {
+    private List<Car> updateCarObjects(List<UpdateCarStatusRequest> requests) {
         List<Car> updatedCars = new ArrayList<>();
-        for (UpdateCarRequest request : requests) {
+        for (UpdateCarStatusRequest request : requests) {
             Car car = carRepository.findById(request.getId())
                     .orElseThrow(() -> new NotFoundException("car not found with id: ", request.getId()));
-            car.setStatus(request.getStatus());
+            car.setSellStatus(request.getSellStatus());
             car.setAvailability(request.getAvailability());
             updatedCars.add(car);
         }
@@ -119,7 +126,7 @@ public class CarService {
         return new CarDto(
                 car.getId(),
                 car.getAvailability(),
-                car.getStatus()
+                car.getSellStatus()
         );
     }
 

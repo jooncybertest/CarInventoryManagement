@@ -1,9 +1,9 @@
 
 package com.junsoo.project.carinventorymanagement.entity;
 
-public enum Status {
+public enum RentStatus {
     AVAILABLE,
     RENTED,
     MAINTENANCE,
-    PENDING
+    NOT_AVAILABLE
 }

@@ -1,6 +1,6 @@
 package com.junsoo.project.carinventorymanagement.dto;
 
-import com.junsoo.project.carinventorymanagement.entity.Status;
+import com.junsoo.project.carinventorymanagement.entity.SellStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,5 +13,5 @@ import lombok.Setter;
 public class CarDto {
     private Long id;
     private Boolean availability;
-    private Status status;
+    private SellStatus rentStatus;
 }

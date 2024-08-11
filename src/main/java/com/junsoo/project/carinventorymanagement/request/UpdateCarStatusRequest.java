@@ -1,13 +1,13 @@
 package com.junsoo.project.carinventorymanagement.request;
 
-import com.junsoo.project.carinventorymanagement.entity.Status;
+import com.junsoo.project.carinventorymanagement.entity.SellStatus;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateCarRequest {
+public class UpdateCarStatusRequest {
     private Long id;
     private Boolean availability;
-    private Status status;
+    private SellStatus sellStatus;
 }
