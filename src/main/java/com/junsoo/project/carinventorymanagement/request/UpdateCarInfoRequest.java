@@ -7,10 +7,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UpdateCarInfoRequest {
+    private Long id;
     private String make;
     private String model;
     private Integer year;
     private String vin;
+    private String color;
     private Integer mileage;
     private String licensePlate;
 }

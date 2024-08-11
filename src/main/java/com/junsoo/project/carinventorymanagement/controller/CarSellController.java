@@ -1,14 +1,16 @@
 
 package com.junsoo.project.carinventorymanagement.controller;
 
+import com.junsoo.project.carinventorymanagement.dto.CarSellDto;
 import com.junsoo.project.carinventorymanagement.entity.Car;
 import com.junsoo.project.carinventorymanagement.request.CreateCarRequest;
 import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
 import com.junsoo.project.carinventorymanagement.request.UpdateCarInfoRequest;
-import com.junsoo.project.carinventorymanagement.request.UpdateCarStatusRequest;
+import com.junsoo.project.carinventorymanagement.request.UpdateCarSellStatusRequest;
 import com.junsoo.project.carinventorymanagement.response.GeneralResponse;
-import com.junsoo.project.carinventorymanagement.response.UpdateCarStatusResponse;
-import com.junsoo.project.carinventorymanagement.service.CarService;
+import com.junsoo.project.carinventorymanagement.response.IsUserAdmin;
+import com.junsoo.project.carinventorymanagement.response.UpdateCarSellStatusResponse;
+import com.junsoo.project.carinventorymanagement.service.CarSellService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -22,7 +24,7 @@ import java.util.List;
 @RequestMapping("/cars/sell")
 @RequiredArgsConstructor
 public class CarSellController {
-    private final CarService carService;
+    private final CarSellService carSellService;
 
     /**
      * user can see cars they registered when status is PENDING
@@ -33,11 +35,20 @@ public class CarSellController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-            Page<Car> cars = carService.findAllCars(header, page, size);
+            Page<Car> cars = carSellService.findAllCars(header, page, size);
             return ResponseEntity.ok(cars);
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(null);
         }
+    }
+
+    /**
+     * user can see cars they sold to a company.
+     */
+    @GetMapping("/mine")
+    public ResponseEntity<List<Car>> getMyCars(@RequestHeader("Authorization") String header) {
+        List<Car> myCars = carSellService.findMySellingCars(header);
+        return new ResponseEntity<>(myCars, HttpStatus.OK);
     }
 
     /**
@@ -47,7 +58,7 @@ public class CarSellController {
     public ResponseEntity<List<Car>> createMySellingCars(
             @RequestHeader("Authorization") String header,
             @RequestBody List<CreateCarRequest> requests) {
-        List<Car> createdCars = carService.registerMyCars(header, requests);
+        List<Car> createdCars = carSellService.registerMySellingCars(header, requests);
         return new ResponseEntity<>(createdCars, HttpStatus.OK);
     }
 
@@ -55,21 +66,28 @@ public class CarSellController {
      * ADMIN user update status of cars ( AVAILABLE, RENTED, MAINTENANCE, PENDING)
      */
     @PutMapping("/status")
-    public ResponseEntity<UpdateCarStatusResponse> updateCarsPurchaseStatus(
+    public ResponseEntity<UpdateCarSellStatusResponse> updateCarsPurchaseStatus(
             @RequestHeader("Authorization") String header,
-            @RequestBody List<UpdateCarStatusRequest> requests) {
-        UpdateCarStatusResponse response = carService.updateCarsStatus(header, requests);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+            @RequestBody List<UpdateCarSellStatusRequest> requests) {
+        try{
+            List<CarSellDto> cars = carSellService.updateCarsSellingStatus(header, requests);
+            UpdateCarSellStatusResponse response =
+                    new UpdateCarSellStatusResponse(true, IsUserAdmin.ADMIN, cars);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(null);
+        }
     }
 
     /**
      * user can update their car info when car's status is PENDING
      */
     @PutMapping("/mine")
-    public ResponseEntity<UpdateCarInfoRequest> updateCarInfo(
+    public ResponseEntity<Car> updateCarInfo(
             @RequestHeader("Authorization") String header,
             @RequestBody UpdateCarInfoRequest request) {
-        return null;
+        Car car = carSellService.updateCarInfo(header, request);
+        return new ResponseEntity<>(car, HttpStatus.OK);
     }
 
     /**
@@ -79,7 +97,7 @@ public class CarSellController {
     public ResponseEntity<GeneralResponse> deleteMyCars(
             @RequestHeader("Authorization") String header,
             @RequestBody DeleteCarRequest request) {
-        carService.deleteMyCars(header, request); // safe delete: they only can delete their own car
+        carSellService.deleteMySellingCars(header, request); // safe delete: they only can delete their own car
         GeneralResponse response = new GeneralResponse();
         response.setMessage("deleted successfully.");
         return new ResponseEntity<>(response, HttpStatus.OK);

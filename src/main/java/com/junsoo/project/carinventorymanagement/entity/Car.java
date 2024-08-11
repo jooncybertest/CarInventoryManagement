@@ -41,8 +41,6 @@ public class Car {
     @Enumerated(EnumType.STRING)
     private SellStatus sellStatus;
 
-    private Boolean availability;
-
     @Column(nullable = false, unique = true)
     private String vin;
 

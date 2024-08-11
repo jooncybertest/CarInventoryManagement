@@ -1,13 +1,16 @@
-package com.junsoo.project.carinventorymanagement.request;
+package com.junsoo.project.carinventorymanagement.dto;
 
 import com.junsoo.project.carinventorymanagement.entity.SellStatus;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateCarStatusRequest {
+@NoArgsConstructor
+@AllArgsConstructor
+public class CarSellDto {
     private Long id;
-    private Boolean availability;
     private SellStatus sellStatus;
 }
