@@ -21,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CarController {
     private final CarService carService;
+
     @GetMapping("/all")
     public ResponseEntity<Page<Car>> getAllCars(
             @RequestParam(defaultValue = "0") int page,
@@ -28,11 +29,13 @@ public class CarController {
         Page<Car> cars = carService.findAllCars(page, size);
         return new ResponseEntity<>(cars, HttpStatus.OK);
     }
+
     @GetMapping("/mine")
     public ResponseEntity<List<Car>> getMyCars(@RequestHeader("Authorization") String header) {
         List<Car> myCars = carService.findMyCars(header);
         return new ResponseEntity<>(myCars, HttpStatus.OK);
     }
+
     @PostMapping("/mine")
     public ResponseEntity<List<Car>> createMyCars(
             @RequestHeader("Authorization") String header,
@@ -40,6 +43,7 @@ public class CarController {
         List<Car> createdCars = carService.registerMyCars(header, requests);
         return new ResponseEntity<>(createdCars, HttpStatus.OK);
     }
+
     @PutMapping
     public ResponseEntity<UpdateCarResponse> updateCarsStatus(
             @RequestHeader("Authorization") String header,
