@@ -16,7 +16,7 @@ public interface CarRepository extends JpaRepository<Car, Long> {
     List<Car> findAllByUserEmail(String email);
     @Modifying
     @Transactional
-    @Query("delete from Car c where c.id in :ids and c.user.email = :email")
+    @Query("delete from Car c where c.id in :ids and c.user.email = :email and c.status = 'PENDING'")
     void deleteAllByIds(@Param("ids") List<Integer> ids, @Param("email") String email);
 
 }

@@ -22,6 +22,9 @@ import java.util.List;
 public class CarController {
     private final CarService carService;
 
+    /**
+     * see all cars
+     */
     @GetMapping("/all")
     public ResponseEntity<Page<Car>> getAllCars(
             @RequestParam(defaultValue = "0") int page,
@@ -30,12 +33,18 @@ public class CarController {
         return new ResponseEntity<>(cars, HttpStatus.OK);
     }
 
+    /**
+     * user can see cars they rented.
+     */
     @GetMapping("/mine")
     public ResponseEntity<List<Car>> getMyCars(@RequestHeader("Authorization") String header) {
         List<Car> myCars = carService.findMyCars(header);
         return new ResponseEntity<>(myCars, HttpStatus.OK);
     }
 
+    /**
+     * users can upload their selling cars to rental company owners
+     */
     @PostMapping("/mine")
     public ResponseEntity<List<Car>> createMyCars(
             @RequestHeader("Authorization") String header,
@@ -44,6 +53,9 @@ public class CarController {
         return new ResponseEntity<>(createdCars, HttpStatus.OK);
     }
 
+    /**
+     * ADMIN user update status of cars ( AVAILABLE, RENTED, MAINTENANCE, PENDING)
+     */
     @PutMapping
     public ResponseEntity<UpdateCarResponse> updateCarsStatus(
             @RequestHeader("Authorization") String header,
@@ -52,6 +64,9 @@ public class CarController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * users can delete their selling cars only when car's status is PENDING.
+     */
     @DeleteMapping("/mine")
     public ResponseEntity<GeneralResponse> deleteMyCars(
             @RequestHeader("Authorization") String header,
