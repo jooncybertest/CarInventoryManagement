@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @FeignClient(name = "user-service", url = "${user.service.url}", configuration = FeignConfig.class)
 public interface AuthServiceClient {
-    @GetMapping("/auth/validate")
+    @GetMapping("/api/v1/auth/validate")
     UserDto authenticatedUser();
 }
