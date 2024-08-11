@@ -23,7 +23,7 @@ public class Car {
     private User sellingUser;
 
     @ManyToOne
-    @JoinColumn(name = "renting_user_email", referencedColumnName = "email", nullable = false)
+    @JoinColumn(name = "renting_user_email", referencedColumnName = "email")
     private User rentingUser;
 
     @Column(nullable = false)

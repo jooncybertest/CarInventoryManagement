@@ -98,8 +98,6 @@ public class CarSellController {
             @RequestHeader("Authorization") String header,
             @RequestBody DeleteCarRequest request) {
         carSellService.deleteMySellingCars(header, request); // safe delete: they only can delete their own car
-        GeneralResponse response = new GeneralResponse();
-        response.setMessage("deleted successfully.");
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(null);
     }
 }

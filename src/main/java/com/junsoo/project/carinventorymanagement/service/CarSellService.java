@@ -100,9 +100,10 @@ public class CarSellService {
                     request.getLicensePlate(), request.getYear(), request.getVin(), request.getModel());
             car.setRentStatus(RentStatus.NOT_AVAILABLE);
             car.setSellStatus(SellStatus.PENDING);
-            User user = new User();
-            user.setEmail(userDto.getEmail());
-            car.setSellingUser(user);
+            User sellingUser = new User();
+            sellingUser.setEmail(userDto.getEmail());
+            car.setSellingUser(sellingUser);
+            car.setRentingUser(null); // Set rentingUser to null
             cars.add(car);
         }
         return saveAll(cars);
