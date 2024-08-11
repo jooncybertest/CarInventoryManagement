@@ -2,9 +2,11 @@
 package com.junsoo.project.carinventorymanagement.controller;
 
 import com.junsoo.project.carinventorymanagement.entity.Car;
-import com.junsoo.project.carinventorymanagement.request.CreateCarsRequest;
+import com.junsoo.project.carinventorymanagement.request.CreateCarRequest;
 import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
+import com.junsoo.project.carinventorymanagement.request.UpdateCarRequest;
 import com.junsoo.project.carinventorymanagement.response.GeneralResponse;
+import com.junsoo.project.carinventorymanagement.response.UpdateCarResponse;
 import com.junsoo.project.carinventorymanagement.service.CarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,15 +36,23 @@ public class CarController {
     @PostMapping("/mine")
     public ResponseEntity<List<Car>> createMyCars(
             @RequestHeader("Authorization") String header,
-            @RequestBody List<CreateCarsRequest> requests) {
+            @RequestBody List<CreateCarRequest> requests) {
         List<Car> createdCars = carService.registerMyCars(header, requests);
         return new ResponseEntity<>(createdCars, HttpStatus.OK);
     }
+    @PutMapping
+    public ResponseEntity<UpdateCarResponse> updateCarsStatus(
+            @RequestHeader("Authorization") String header,
+            @RequestBody List<UpdateCarRequest> requests) {
+        UpdateCarResponse response = carService.updateCars(header, requests);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @DeleteMapping("/mine")
     public ResponseEntity<GeneralResponse> deleteMyCars(
             @RequestHeader("Authorization") String header,
             @RequestBody DeleteCarRequest request) {
-        carService.deleteMyCars(header, request); // safe delete: they only can delete their own car 
+        carService.deleteMyCars(header, request); // safe delete: they only can delete their own car
         GeneralResponse response = new GeneralResponse();
         response.setMessage("deleted successfully.");
         return new ResponseEntity<>(response, HttpStatus.OK);

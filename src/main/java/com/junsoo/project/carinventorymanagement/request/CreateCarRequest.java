@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CreateCarsRequest {
+public class CreateCarRequest {
     private String make;
     private String model;
     private Integer year;

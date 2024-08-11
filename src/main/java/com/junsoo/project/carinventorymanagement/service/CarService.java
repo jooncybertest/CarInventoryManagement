@@ -2,16 +2,20 @@
 package com.junsoo.project.carinventorymanagement.service;
 
 import com.junsoo.project.carinventorymanagement.config.FeignClientInterceptor;
+import com.junsoo.project.carinventorymanagement.dto.CarDto;
 import com.junsoo.project.carinventorymanagement.dto.UserDto;
 import com.junsoo.project.carinventorymanagement.entity.Car;
 import com.junsoo.project.carinventorymanagement.entity.Status;
 import com.junsoo.project.carinventorymanagement.entity.User;
+import com.junsoo.project.carinventorymanagement.entity.UserRole;
+import com.junsoo.project.carinventorymanagement.exception.NotFoundException;
 import com.junsoo.project.carinventorymanagement.repository.CarRepository;
-import com.junsoo.project.carinventorymanagement.request.CreateCarsRequest;
+import com.junsoo.project.carinventorymanagement.request.CreateCarRequest;
 import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
+import com.junsoo.project.carinventorymanagement.request.UpdateCarRequest;
+import com.junsoo.project.carinventorymanagement.response.IsUserAdmin;
+import com.junsoo.project.carinventorymanagement.response.UpdateCarResponse;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -40,10 +45,10 @@ public class CarService {
         }
     }
 
-    public List<Car> registerMyCars(String header, List<CreateCarsRequest> requests) {
+    public List<Car> registerMyCars(String header, List<CreateCarRequest> requests) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
-            return createMyCarObject(requests, userDto);
+            return createMyCarObjects(requests, userDto);
         } finally {
             FeignClientInterceptor.clear();
         }
@@ -58,10 +63,28 @@ public class CarService {
         }
     }
 
+    public UpdateCarResponse updateCars(String header, List<UpdateCarRequest> requests) {
+        try {
+            UserDto userDto = feignService.getUserInformation(header);
+            if (Objects.equals(userDto.getRole(), UserRole.ROLE_ADMIN.toString())) {
+                List<Car> updatedCars = updateCarObjects(requests);
+                List<CarDto> cars = updatedCars.stream()
+                        .map(this::convertToDto)
+                        .toList();
+                return new UpdateCarResponse(true, IsUserAdmin.ADMIN, cars);
+            } else {
+                return new UpdateCarResponse(false, IsUserAdmin.NOT_ADMIN, null);
+            }
+        } finally {
+            FeignClientInterceptor.clear();
+        }
+    }
+
+
     // NOTE: 'availability' and 'status' are determined by system owner. will be later determined
-    private List<Car> createMyCarObject(List<CreateCarsRequest> requests, UserDto userDto) {
+    private List<Car> createMyCarObjects(List<CreateCarRequest> requests, UserDto userDto) {
         List<Car> cars = new ArrayList<>();
-        for (CreateCarsRequest request : requests) {
+        for (CreateCarRequest request : requests) {
             Car car = new Car();
             car.setMake(request.getMake());
             car.setColor(request.getColor());
@@ -78,6 +101,28 @@ public class CarService {
         }
         return saveAll(cars);
     }
+
+    private List<Car> updateCarObjects(List<UpdateCarRequest> requests) {
+        List<Car> updatedCars = new ArrayList<>();
+        for (UpdateCarRequest request : requests) {
+            Car car = carRepository.findById(request.getId())
+                    .orElseThrow(() -> new NotFoundException("car not found with id: ", request.getId()));
+            car.setStatus(request.getStatus());
+            car.setAvailability(request.getAvailability());
+            updatedCars.add(car);
+        }
+        carRepository.saveAll(updatedCars);
+        return updatedCars;
+    }
+
+    private CarDto convertToDto(Car car) {
+        return new CarDto(
+                car.getId(),
+                car.getAvailability(),
+                car.getStatus()
+        );
+    }
+
 
     public List<Car> saveAll(List<Car> cars) {
         return carRepository.saveAll(cars);
