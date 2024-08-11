@@ -38,14 +38,13 @@ public class CarController {
         List<Car> createdCars = carService.registerMyCars(header, requests);
         return new ResponseEntity<>(createdCars, HttpStatus.OK);
     }
-
     @DeleteMapping("/mine")
     public ResponseEntity<GeneralResponse> deleteMyCars(
             @RequestHeader("Authorization") String header,
             @RequestBody DeleteCarRequest request) {
-        carService.deleteMyCars(header, request);
+        carService.deleteMyCars(header, request); // safe delete: they only can delete their own car 
         GeneralResponse response = new GeneralResponse();
-        response.setMessage("deleted successfully");
+        response.setMessage("deleted successfully.");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

@@ -1,7 +1,6 @@
 
 package com.junsoo.project.carinventorymanagement.service;
 
-import com.junsoo.project.carinventorymanagement.client.AuthServiceClient;
 import com.junsoo.project.carinventorymanagement.config.FeignClientInterceptor;
 import com.junsoo.project.carinventorymanagement.dto.UserDto;
 import com.junsoo.project.carinventorymanagement.entity.Car;
@@ -10,7 +9,6 @@ import com.junsoo.project.carinventorymanagement.entity.User;
 import com.junsoo.project.carinventorymanagement.repository.CarRepository;
 import com.junsoo.project.carinventorymanagement.request.CreateCarsRequest;
 import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,14 +24,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CarService {
     private final CarRepository carRepository;
-    private final AuthServiceClient authServiceClient;
     private final FeignService feignService;
-    private final Logger logger = LoggerFactory.getLogger(CarService.class);
 
     public Page<Car> findAllCars(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return carRepository.findAll(pageable);
     }
+
     public List<Car> findMyCars(String header) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
@@ -51,10 +48,11 @@ public class CarService {
             FeignClientInterceptor.clear();
         }
     }
+
     public void deleteMyCars(String header, DeleteCarRequest request) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
-            carRepository.deleteAllByIds(request.getIds());
+            carRepository.deleteAllByIds(request.getIds(), userDto.getEmail());
         } finally {
             FeignClientInterceptor.clear();
         }
