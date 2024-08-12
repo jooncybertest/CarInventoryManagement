@@ -11,8 +11,6 @@ import com.junsoo.project.carinventorymanagement.request.CreateCarRequest;
 import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
 import com.junsoo.project.carinventorymanagement.request.UpdateCarInfoRequest;
 import com.junsoo.project.carinventorymanagement.request.UpdateCarSellStatusRequest;
-import com.junsoo.project.carinventorymanagement.response.IsUserAdmin;
-import com.junsoo.project.carinventorymanagement.response.UpdateCarSellStatusResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -73,7 +71,7 @@ public class CarSellService {
             FeignClientInterceptor.clear();
         }
     }
-    public List<CarSellDto> updateCarsSellingStatus(String header, List<UpdateCarSellStatusRequest> requests) {
+    public List<CarSellDto> updateCarsStatus(String header, List<UpdateCarSellStatusRequest> requests) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
             if (Objects.equals(userDto.getRole(), UserRole.ROLE_ADMIN.toString())) {
@@ -115,7 +113,10 @@ public class CarSellService {
                 request.getMake(),
                 request.getColor(),
                 request.getMileage(),
-                request.getLicensePlate(), request.getYear(), request.getVin(), request.getModel());
+                request.getLicensePlate(),
+                request.getYear(),
+                request.getVin(),
+                request.getModel());
         return car;
     }
     private void setCarObject(Car car,
@@ -137,6 +138,7 @@ public class CarSellService {
             Car car = carRepository.findById(request.getId())
                     .orElseThrow(() -> new NotFoundException("car not found with id: ", request.getId()));
             car.setSellStatus(request.getSellStatus());
+            car.setRentStatus(request.getRentStatus());
             updatedCars.add(car);
         }
         carRepository.saveAll(updatedCars);
@@ -145,7 +147,8 @@ public class CarSellService {
     private CarSellDto convertToDto(Car car) {
         return new CarSellDto(
                 car.getId(),
-                car.getSellStatus()
+                car.getSellStatus(),
+                car.getRentStatus()
         );
     }
     public List<Car> saveAll(List<Car> cars) {

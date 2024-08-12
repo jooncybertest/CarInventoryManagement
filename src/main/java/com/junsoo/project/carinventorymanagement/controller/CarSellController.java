@@ -63,14 +63,14 @@ public class CarSellController {
     }
 
     /**
-     * ADMIN user update status of cars ( AVAILABLE, RENTED, MAINTENANCE, PENDING)
+     * ADMIN user update status of cars (rent status, sell status)
      */
     @PutMapping("/status")
-    public ResponseEntity<UpdateCarSellStatusResponse> updateCarsPurchaseStatus(
+    public ResponseEntity<UpdateCarSellStatusResponse> updateCarsStatus(
             @RequestHeader("Authorization") String header,
             @RequestBody List<UpdateCarSellStatusRequest> requests) {
         try{
-            List<CarSellDto> cars = carSellService.updateCarsSellingStatus(header, requests);
+            List<CarSellDto> cars = carSellService.updateCarsStatus(header, requests);
             UpdateCarSellStatusResponse response =
                     new UpdateCarSellStatusResponse(true, IsUserAdmin.ADMIN, cars);
             return new ResponseEntity<>(response, HttpStatus.OK);

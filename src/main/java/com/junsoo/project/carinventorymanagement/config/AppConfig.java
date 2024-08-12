@@ -12,4 +12,5 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class AppConfig {
     @Value("${user.service.url}")
     private String userURL;
+
 }

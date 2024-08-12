@@ -2,7 +2,10 @@
 package com.junsoo.project.carinventorymanagement.repository;
 
 import com.junsoo.project.carinventorymanagement.entity.Car;
+import com.junsoo.project.carinventorymanagement.entity.RentStatus;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,5 +21,7 @@ public interface CarRepository extends JpaRepository<Car, Long> {
     @Transactional
     @Query("delete from Car c where c.id in :ids and c.sellingUser.email = :email and c.sellStatus = 'PENDING'")
     void deleteAllByIds(@Param("ids") List<Integer> ids, @Param("email") String email);
+
+    Page<Car> findAllByRentStatus(RentStatus rentStatus, Pageable pageable);
 
 }
