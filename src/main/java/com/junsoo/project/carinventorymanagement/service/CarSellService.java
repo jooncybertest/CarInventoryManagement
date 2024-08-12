@@ -138,7 +138,9 @@ public class CarSellService {
             Car car = carRepository.findById(request.getId())
                     .orElseThrow(() -> new NotFoundException("car not found with id: ", request.getId()));
             car.setSellStatus(request.getSellStatus());
-            car.setRentStatus(request.getRentStatus());
+            if (request.getSellStatus() == SellStatus.PURCHASED) {
+                car.setRentStatus(RentStatus.AVAILABLE);
+            }
             updatedCars.add(car);
         }
         carRepository.saveAll(updatedCars);
