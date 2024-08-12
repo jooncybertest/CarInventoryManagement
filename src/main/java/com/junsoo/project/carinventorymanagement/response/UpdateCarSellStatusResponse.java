@@ -1,6 +1,6 @@
 package com.junsoo.project.carinventorymanagement.response;
 
-import com.junsoo.project.carinventorymanagement.dto.CarSellDto;
+import com.junsoo.project.carinventorymanagement.dto.CarStatusDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,5 +15,5 @@ import java.util.List;
 public class UpdateCarSellStatusResponse {
     private boolean success;
     private IsUserAdmin isUserAdmin;
-    private List<CarSellDto> updatedCars;
+    private List<CarStatusDto> updatedCars;
 }

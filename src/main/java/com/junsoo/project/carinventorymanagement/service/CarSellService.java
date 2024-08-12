@@ -2,7 +2,7 @@
 package com.junsoo.project.carinventorymanagement.service;
 
 import com.junsoo.project.carinventorymanagement.config.FeignClientInterceptor;
-import com.junsoo.project.carinventorymanagement.dto.CarSellDto;
+import com.junsoo.project.carinventorymanagement.dto.CarStatusDto;
 import com.junsoo.project.carinventorymanagement.dto.UserDto;
 import com.junsoo.project.carinventorymanagement.entity.*;
 import com.junsoo.project.carinventorymanagement.exception.NotFoundException;
@@ -71,7 +71,7 @@ public class CarSellService {
             FeignClientInterceptor.clear();
         }
     }
-    public List<CarSellDto> updateCarsStatus(String header, List<UpdateCarSellStatusRequest> requests) {
+    public List<CarStatusDto> updateCarsStatus(String header, List<UpdateCarSellStatusRequest> requests) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
             if (Objects.equals(userDto.getRole(), UserRole.ROLE_ADMIN.toString())) {
@@ -144,8 +144,8 @@ public class CarSellService {
         carRepository.saveAll(updatedCars);
         return updatedCars;
     }
-    private CarSellDto convertToDto(Car car) {
-        return new CarSellDto(
+    private CarStatusDto convertToDto(Car car) {
+        return new CarStatusDto(
                 car.getId(),
                 car.getSellStatus(),
                 car.getRentStatus()

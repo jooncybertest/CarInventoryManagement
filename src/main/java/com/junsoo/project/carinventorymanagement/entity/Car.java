@@ -22,6 +22,10 @@ public class Car {
     @JoinColumn(name = "selling_user_email", referencedColumnName = "email", nullable = false)
     private User sellingUser;
 
+    @ManyToOne
+    @JoinColumn(name = "renting_user_email", referencedColumnName = "email")
+    private User rentingUser;
+
     @Column(nullable = false)
     private String make;
 
@@ -33,6 +37,9 @@ public class Car {
 
     @Enumerated(EnumType.STRING)
     private SellStatus sellStatus;
+
+    @Enumerated(EnumType.STRING)
+    private RentStatus rentStatus;
 
     @Column(nullable = false, unique = true)
     private String vin;

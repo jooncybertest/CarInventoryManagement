@@ -1,7 +1,7 @@
 
 package com.junsoo.project.carinventorymanagement.controller;
 
-import com.junsoo.project.carinventorymanagement.dto.CarSellDto;
+import com.junsoo.project.carinventorymanagement.dto.CarStatusDto;
 import com.junsoo.project.carinventorymanagement.entity.Car;
 import com.junsoo.project.carinventorymanagement.request.CreateCarRequest;
 import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
@@ -70,7 +70,7 @@ public class CarSellController {
             @RequestHeader("Authorization") String header,
             @RequestBody List<UpdateCarSellStatusRequest> requests) {
         try{
-            List<CarSellDto> cars = carSellService.updateCarsStatus(header, requests);
+            List<CarStatusDto> cars = carSellService.updateCarsStatus(header, requests);
             UpdateCarSellStatusResponse response =
                     new UpdateCarSellStatusResponse(true, IsUserAdmin.ADMIN, cars);
             return new ResponseEntity<>(response, HttpStatus.OK);
