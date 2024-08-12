@@ -22,10 +22,6 @@ public class Car {
     @JoinColumn(name = "selling_user_email", referencedColumnName = "email", nullable = false)
     private User sellingUser;
 
-    @ManyToOne
-    @JoinColumn(name = "renting_user_email", referencedColumnName = "email")
-    private User rentingUser;
-
     @Column(nullable = false)
     private String make;
 
@@ -34,9 +30,6 @@ public class Car {
 
     @Column(nullable = false)
     private Integer year;
-
-    @Enumerated(EnumType.STRING)
-    private RentStatus rentStatus;
 
     @Enumerated(EnumType.STRING)
     private SellStatus sellStatus;
@@ -56,10 +49,11 @@ public class Car {
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false)
-    private Date createdAt;
+    private Date createdAt; // the time when user post their cars on sale
 
     @UpdateTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private Date updatedAt;
+
 }
