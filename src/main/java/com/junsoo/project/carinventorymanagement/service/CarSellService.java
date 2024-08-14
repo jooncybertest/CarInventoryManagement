@@ -7,15 +7,15 @@ import com.junsoo.project.carinventorymanagement.dto.UserDto;
 import com.junsoo.project.carinventorymanagement.entity.*;
 import com.junsoo.project.carinventorymanagement.exception.NotFoundException;
 import com.junsoo.project.carinventorymanagement.repository.CarRepository;
-import com.junsoo.project.carinventorymanagement.request.CreateCarRequest;
-import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
-import com.junsoo.project.carinventorymanagement.request.UpdateCarInfoRequest;
-import com.junsoo.project.carinventorymanagement.request.UpdateCarSellStatusRequest;
+import com.junsoo.project.carinventorymanagement.request.*;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -28,26 +28,26 @@ import java.util.Objects;
 public class CarSellService {
     private final CarRepository carRepository;
     private final FeignService feignService;
+    private final Logger logger = LoggerFactory.getLogger(CarSellService.class);
 
     public Page<Car> findAllCars(String header, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         UserDto userDto = feignService.getUserInformation(header);
-        if (Objects.equals(userDto.getRole(), UserRole.ROLE_ADMIN.toString())) {
+        if (Objects.equals(userDto.getRole(), "ROLE_ADMIN")) {
             return carRepository.findAll(pageable);
         } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access Denied. Only admin uses this api");
         }
-
     }
     public List<Car> findMySellingCars(String header) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
-            return carRepository.findAllBySellingUserEmail(userDto.getEmail());
+            return carRepository.findAllByUserEmail(userDto.getEmail());
         } finally {
             FeignClientInterceptor.clear();
         }
     }
-    public List<Car> registerMySellingCars(String header, List<CreateCarRequest> requests) {
+    public List<Car> registerMySellingCars(String header, List<CreateRequest> requests) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
             return createMyCars(requests, userDto);
@@ -55,7 +55,7 @@ public class CarSellService {
             FeignClientInterceptor.clear();
         }
     }
-    public void deleteMySellingCars(String header, DeleteCarRequest request) {
+    public void deleteMySellingCars(String header, DeleteRequest request) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
             carRepository.deleteAllByIds(request.getIds(), userDto.getEmail());
@@ -63,7 +63,7 @@ public class CarSellService {
             FeignClientInterceptor.clear();
         }
     }
-    public Car updateCarInfo(String header, UpdateCarInfoRequest request) {
+    public Car updateCarInfo(String header, UpdateInfoRequest request) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
             return updateMyCar(request);
@@ -71,11 +71,12 @@ public class CarSellService {
             FeignClientInterceptor.clear();
         }
     }
-    public List<CarStatusDto> updateCarsStatus(String header, List<UpdateCarSellStatusRequest> requests) {
+    public List<CarStatusDto> updateCarsStatus(String header, List<UpdateSellStatusRequest> requests) {
         try {
             UserDto userDto = feignService.getUserInformation(header);
-            if (Objects.equals(userDto.getRole(), UserRole.ROLE_ADMIN.toString())) {
-                List<Car> updatedCars = updateCarsStatus(requests);
+            if (Objects.equals(userDto.getRole(), "ROLE_ADMIN")) {
+                List<Car> updatedCars = updateSellStatus(requests);
+                createReservationCall(updatedCars); // async call to send data to booking management microservice
                 return updatedCars.stream()
                         .map(this::convertToDto)
                         .toList();
@@ -86,27 +87,59 @@ public class CarSellService {
             FeignClientInterceptor.clear();
         }
     }
-    // NOTE: 'availability' and two kinds of 'status' will be updated by system owner later.
-    private List<Car> createMyCars(List<CreateCarRequest> requests, UserDto userDto) {
+    private List<Car> updateSellStatus(List<UpdateSellStatusRequest> requests) {
+        List<Car> updatedCars = new ArrayList<>();
+        for (UpdateSellStatusRequest request : requests) {
+            Car car = carRepository.findById(request.getId())
+                    .orElseThrow(() -> new NotFoundException("car not found with id: ", request.getId()));
+            car.setSellStatus(request.getSellStatus());
+            updatedCars.add(car);
+        }
+        return carRepository.saveAll(updatedCars);
+    }
+
+    /**
+     * send purchase cars to booking management microservice asynchronously
+     */
+    @Async
+    protected void createReservationCall(List<Car> updatedCars){
+        List<CreateReservationRequest> requests = new ArrayList<>();
+        List<Car> filteredCars = updatedCars.stream()
+                .filter(car -> car.getSellStatus() == SellStatus.PURCHASED)
+                .toList();
+        logger.info("filtered list of cars: {}", filteredCars);
+        for (Car filteredCar : filteredCars) {
+            CreateReservationRequest reservationRequest = new CreateReservationRequest();
+            reservationRequest.setCarId(filteredCar.getId());
+            reservationRequest.setUserEmail(filteredCar.getUserEmail());
+            reservationRequest.setMileage(filteredCar.getMileage());
+            requests.add(reservationRequest);
+        }
+        feignService.createReservations(requests);
+        logger.info("reservations successfully created");
+    }
+
+    // NOTE: 'availability' and 'status' will be updated by system owner later.
+    private List<Car> createMyCars(List<CreateRequest> requests, UserDto userDto) {
         List<Car> cars = new ArrayList<>();
-        for (CreateCarRequest request : requests) {
+        for (CreateRequest request : requests) {
             Car car = new Car();
             setCarObject(car,
                     request.getMake(),
                     request.getColor(),
                     request.getMileage(),
-                    request.getLicensePlate(), request.getYear(), request.getVin(), request.getModel());
-            car.setRentStatus(RentStatus.NOT_AVAILABLE);
+                    request.getLicensePlate(),
+                    request.getYear(),
+                    request.getVin(),
+                    request.getModel());
             car.setSellStatus(SellStatus.PENDING);
-            User sellingUser = new User();
-            sellingUser.setEmail(userDto.getEmail());
-            car.setSellingUser(sellingUser);
-            car.setRentingUser(null); // Set rentingUser to null
+            car.setUserEmail(userDto.getEmail());
             cars.add(car);
         }
         return saveAll(cars);
     }
-    private Car updateMyCar(UpdateCarInfoRequest request) {
+
+    private Car updateMyCar(UpdateInfoRequest request) {
         Car car = carRepository.findById(request.getId())
                 .orElseThrow(() -> new NotFoundException("car not found with id: ", request.getId()));
         setCarObject(car,
@@ -132,25 +165,11 @@ public class CarSellService {
         car.setVin(vin);
         car.setModel(model);
     }
-    private List<Car> updateCarsStatus(List<UpdateCarSellStatusRequest> requests) {
-        List<Car> updatedCars = new ArrayList<>();
-        for (UpdateCarSellStatusRequest request : requests) {
-            Car car = carRepository.findById(request.getId())
-                    .orElseThrow(() -> new NotFoundException("car not found with id: ", request.getId()));
-            car.setSellStatus(request.getSellStatus());
-            if (request.getSellStatus() == SellStatus.PURCHASED) {
-                car.setRentStatus(RentStatus.AVAILABLE);
-            }
-            updatedCars.add(car);
-        }
-        carRepository.saveAll(updatedCars);
-        return updatedCars;
-    }
+
     private CarStatusDto convertToDto(Car car) {
         return new CarStatusDto(
                 car.getId(),
-                car.getSellStatus(),
-                car.getRentStatus()
+                car.getSellStatus()
         );
     }
     public List<Car> saveAll(List<Car> cars) {

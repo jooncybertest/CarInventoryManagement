@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateCarInfoRequest {
+public class UpdateInfoRequest {
     private Long id;
     private String make;
     private String model;

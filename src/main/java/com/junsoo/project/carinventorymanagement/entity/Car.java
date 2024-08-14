@@ -7,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name = "cars")
@@ -19,13 +18,7 @@ public class Car {
     @Column(nullable = false)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "selling_user_email", referencedColumnName = "email", nullable = false)
-    private User sellingUser;
-
-    @ManyToOne
-    @JoinColumn(name = "renting_user_email", referencedColumnName = "email")
-    private User rentingUser;
+    private String userEmail;
 
     @Column(nullable = false)
     private String make;
@@ -38,9 +31,6 @@ public class Car {
 
     @Enumerated(EnumType.STRING)
     private SellStatus sellStatus;
-
-    @Enumerated(EnumType.STRING)
-    private RentStatus rentStatus;
 
     @Column(nullable = false, unique = true)
     private String vin;
@@ -57,7 +47,7 @@ public class Car {
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt; // the time when user post their cars on sale
+    private LocalDateTime postedAt;
 
     @UpdateTimestamp
     @Temporal(TemporalType.TIMESTAMP)

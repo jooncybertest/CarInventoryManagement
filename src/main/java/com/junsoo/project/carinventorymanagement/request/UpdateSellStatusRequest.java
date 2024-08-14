@@ -6,8 +6,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateCarSellStatusRequest {
+public class UpdateSellStatusRequest {
     private Long id;
-    private Boolean availability;
     private SellStatus sellStatus;
 }
+

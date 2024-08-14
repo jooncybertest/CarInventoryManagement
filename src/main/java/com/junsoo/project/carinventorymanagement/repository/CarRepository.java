@@ -13,10 +13,10 @@ import java.util.List;
 
 @Repository
 public interface CarRepository extends JpaRepository<Car, Long> {
-    List<Car> findAllBySellingUserEmail(String email);
+    List<Car> findAllByUserEmail(String email);
     @Modifying
     @Transactional
-    @Query("delete from Car c where c.id in :ids and c.sellingUser.email = :email and c.sellStatus = 'PENDING'")
+    @Query("delete from Car c where c.id in :ids and c.userEmail= :email and c.sellStatus = 'PENDING'")
     void deleteAllByIds(@Param("ids") List<Integer> ids, @Param("email") String email);
 
 }

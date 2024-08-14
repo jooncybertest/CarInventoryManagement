@@ -3,10 +3,10 @@ package com.junsoo.project.carinventorymanagement.controller;
 
 import com.junsoo.project.carinventorymanagement.dto.CarStatusDto;
 import com.junsoo.project.carinventorymanagement.entity.Car;
-import com.junsoo.project.carinventorymanagement.request.CreateCarRequest;
-import com.junsoo.project.carinventorymanagement.request.DeleteCarRequest;
-import com.junsoo.project.carinventorymanagement.request.UpdateCarInfoRequest;
-import com.junsoo.project.carinventorymanagement.request.UpdateCarSellStatusRequest;
+import com.junsoo.project.carinventorymanagement.request.CreateRequest;
+import com.junsoo.project.carinventorymanagement.request.DeleteRequest;
+import com.junsoo.project.carinventorymanagement.request.UpdateInfoRequest;
+import com.junsoo.project.carinventorymanagement.request.UpdateSellStatusRequest;
 import com.junsoo.project.carinventorymanagement.response.GeneralResponse;
 import com.junsoo.project.carinventorymanagement.response.IsUserAdmin;
 import com.junsoo.project.carinventorymanagement.response.UpdateCarSellStatusResponse;
@@ -57,7 +57,7 @@ public class CarSellController {
     @PostMapping("/mine")
     public ResponseEntity<List<Car>> createMySellingCars(
             @RequestHeader("Authorization") String header,
-            @RequestBody List<CreateCarRequest> requests) {
+            @RequestBody List<CreateRequest> requests) {
         List<Car> createdCars = carSellService.registerMySellingCars(header, requests);
         return new ResponseEntity<>(createdCars, HttpStatus.OK);
     }
@@ -68,7 +68,7 @@ public class CarSellController {
     @PutMapping("/status")
     public ResponseEntity<UpdateCarSellStatusResponse> updateCarsStatus(
             @RequestHeader("Authorization") String header,
-            @RequestBody List<UpdateCarSellStatusRequest> requests) {
+            @RequestBody List<UpdateSellStatusRequest> requests) {
         try{
             List<CarStatusDto> cars = carSellService.updateCarsStatus(header, requests);
             UpdateCarSellStatusResponse response =
@@ -85,7 +85,7 @@ public class CarSellController {
     @PutMapping("/mine")
     public ResponseEntity<Car> updateCarInfo(
             @RequestHeader("Authorization") String header,
-            @RequestBody UpdateCarInfoRequest request) {
+            @RequestBody UpdateInfoRequest request) {
         Car car = carSellService.updateCarInfo(header, request);
         return new ResponseEntity<>(car, HttpStatus.OK);
     }
@@ -96,7 +96,7 @@ public class CarSellController {
     @DeleteMapping("/mine")
     public ResponseEntity<GeneralResponse> deleteMyCars(
             @RequestHeader("Authorization") String header,
-            @RequestBody DeleteCarRequest request) {
+            @RequestBody DeleteRequest request) {
         carSellService.deleteMySellingCars(header, request); // safe delete: they only can delete their own car
         return ResponseEntity.ok(null);
     }
