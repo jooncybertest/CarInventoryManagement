@@ -45,7 +45,7 @@ The **Car Rental and Fleet Management System** is a comprehensive and scalable s
 
 1. **Clone the repository**:
     ```bash
-    git clone https://github.com/your-username/car-rental-fleet-management.git
+    git clone https://github.com/jooncybertest/CarInventoryManagement.git
     cd car-rental-fleet-management
     ```
 
